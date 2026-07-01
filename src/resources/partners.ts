@@ -14,10 +14,11 @@ import type {
   UpdatePartnerAccountRequest,
 } from "../types";
 
-const TALO_PARTNER_AUTHORIZE_BASE_URL = "https://app.talo.com.ar/authorize";
-
 export class PartnersResource {
-  constructor(private readonly httpClient: TaloHttpClient) {}
+  constructor(
+    private readonly httpClient: TaloHttpClient,
+    private readonly authorizeBaseUrl: string,
+  ) {}
 
   /**
    * Build the partner onboarding authorization URL used to redirect end users.
@@ -28,7 +29,7 @@ export class PartnersResource {
   ): string {
     const parsedPartnerId = identifierSchema.parse(partnerId);
     const url = new URL(
-      `${TALO_PARTNER_AUTHORIZE_BASE_URL}/${encodeURIComponent(parsedPartnerId)}`,
+      `${this.authorizeBaseUrl}/${encodeURIComponent(parsedPartnerId)}`,
     );
 
     if (options.referredUserId !== undefined) {

@@ -33,6 +33,7 @@ export interface TaloClientConfig {
   userId: string;
   environment?: TaloEnvironment | undefined;
   baseUrl?: string | undefined;
+  authorizeBaseUrl?: string | undefined;
   headers?: HeadersInit | undefined;
   fetch?: FetchLike | undefined;
 }

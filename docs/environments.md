@@ -5,7 +5,13 @@
 - `environment: "production"` -> `https://api.talo.com.ar`
 - `environment: "sandbox"` -> `https://sandbox-api.talo.com.ar`
 
-If `baseUrl` is provided, it overrides `environment`.
+Partner OAuth authorize URLs follow the same environment:
+
+- `environment: "production"` -> `https://app.talo.com.ar/authorize`
+- `environment: "sandbox"` -> `https://sandbox.talo.com.ar/authorize`
+
+If `baseUrl` is provided, it overrides `environment` for API calls.
+If `authorizeBaseUrl` is provided, it overrides the partner authorize host.
 
 ## Production
 
