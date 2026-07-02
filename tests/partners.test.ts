@@ -51,12 +51,12 @@ describe("TaloClient partners", () => {
     );
   });
 
-  test("allows authorizeBaseUrl override", () => {
+  test("allows authorizeBaseUrl override with optional trailing slash", () => {
     const talo = new TaloClient({
       clientId: "client_123",
       clientSecret: "secret_456",
       userId: "user_789",
-      authorizeBaseUrl: "https://custom.example/authorize",
+      authorizeBaseUrl: "https://custom.example/authorize/",
       fetch: async () => new Response("", { status: 500 }),
     });
 

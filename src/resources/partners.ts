@@ -15,10 +15,14 @@ import type {
 } from "../types";
 
 export class PartnersResource {
+  private readonly authorizeBaseUrl: string;
+
   constructor(
     private readonly httpClient: TaloHttpClient,
-    private readonly authorizeBaseUrl: string,
-  ) {}
+    authorizeBaseUrl: string,
+  ) {
+    this.authorizeBaseUrl = authorizeBaseUrl.replace(/\/+$/, "");
+  }
 
   /**
    * Build the partner onboarding authorization URL used to redirect end users.
