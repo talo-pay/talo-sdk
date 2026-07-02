@@ -20,6 +20,9 @@ The client manages access tokens automatically using your credentials:
 
 It fetches a token from `POST /users/:user_id/tokens`, caches it in memory, refreshes before expiration, and retries once on `401` with a fresh token.
 
+Partner flows can also pass an exchanged `accessToken` directly. In that mode,
+the SDK sends that bearer token on API calls and does not call the token endpoint.
+
 ## Environment selection
 
 The SDK supports first-class environments:
@@ -103,9 +106,14 @@ const exchange = await talo.partners.exchangeToken({
   client_secret: process.env.TALO_PARTNER_SECRET!,
 });
 
-// 3) Query/update account config
-const account = await talo.partners.getAccount(exchange.user_id);
-await talo.partners.updateAccount(exchange.user_id, {
+// 3) Query/update account config with the exchanged partner token
+const partnerTalo = new TaloClient({
+  accessToken: exchange.token,
+  environment: "production",
+});
+
+const account = await partnerTalo.partners.getAccount(exchange.user_id);
+await partnerTalo.partners.updateAccount(exchange.user_id, {
   transfer_tolerance: 15,
 });
 ```

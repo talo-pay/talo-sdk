@@ -28,7 +28,12 @@ console.log(exchange.token, exchange.user_id, exchange.referred_user_id);
 ## Get account status
 
 ```ts
-const account = await talo.partners.getAccount(exchange.user_id);
+const partnerTalo = new TaloClient({
+  accessToken: exchange.token,
+  environment: "production",
+});
+
+const account = await partnerTalo.partners.getAccount(exchange.user_id);
 console.log(account.account_status);
 ```
 
@@ -37,6 +42,10 @@ console.log(account.account_status);
 - `PENDING`
 - `REJECTED`
 - `SUSPENDED`
+
+Use `partners.getAccount(userId)` for onboarding/account activation state.
+`customers.get(customerId)` retrieves a customer wallet record and does not replace
+the partner account-status endpoint.
 
 ## Create payment as partner
 
