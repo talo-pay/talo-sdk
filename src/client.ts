@@ -33,12 +33,18 @@ const TALO_BASE_URLS: Record<TaloEnvironment, string> = {
   sandbox: "https://sandbox-api.talo.com.ar",
 };
 
+const TALO_AUTHORIZE_BASE_URLS: Record<TaloEnvironment, string> = {
+  production: "https://app.talo.com.ar/authorize",
+  sandbox: "https://sandbox.talo.com.ar/authorize",
+};
+
 const clientConfigSchema = z.object({
   clientId: z.string().min(1),
   clientSecret: z.string().min(1),
   userId: z.string().min(1),
   environment: z.enum(["production", "sandbox"]).optional(),
   baseUrl: z.string().url().optional(),
+  authorizeBaseUrl: z.string().url().optional(),
   headers: z.custom<HeadersInit>().optional(),
   fetch: z.custom<FetchLike>().optional(),
 });
@@ -60,9 +66,10 @@ export class TaloClient {
   constructor(config: TaloClientConfig) {
     const parsedConfig = clientConfigSchema.parse(config);
 
-    const baseUrl =
-      parsedConfig.baseUrl ??
-      TALO_BASE_URLS[parsedConfig.environment ?? "production"];
+    const environment = parsedConfig.environment ?? "production";
+    const baseUrl = parsedConfig.baseUrl ?? TALO_BASE_URLS[environment];
+    const authorizeBaseUrl =
+      parsedConfig.authorizeBaseUrl ?? TALO_AUTHORIZE_BASE_URLS[environment];
 
     const tokenManager = new TaloTokenManager({
       baseUrl,
@@ -82,7 +89,7 @@ export class TaloClient {
 
     this.payments = new PaymentsResource(httpClient);
     this.customers = new CustomersResource(httpClient);
-    this.partners = new PartnersResource(httpClient);
+    this.partners = new PartnersResource(httpClient, authorizeBaseUrl);
     this.refunds = new RefundsResource(httpClient);
     this.sandbox = new SandboxResource(httpClient);
     this.webhooks = new TaloWebhooks((paymentId) => this.payments.get(paymentId));

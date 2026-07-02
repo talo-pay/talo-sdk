@@ -13,7 +13,7 @@ function createClient(fetchImpl: FetchLike): TaloClient {
 }
 
 describe("TaloClient partners", () => {
-  test("builds partner authorization URLs", () => {
+  test("builds production partner authorization URLs by default", () => {
     const talo = createClient(async () => new Response("", { status: 500 }));
 
     expect(talo.getPartnerAuthorizationUrl("partner_abc")).toBe(
@@ -26,6 +26,42 @@ describe("TaloClient partners", () => {
       }),
     ).toBe(
       "https://app.talo.com.ar/authorize/partner_abc?referred_user_id=external_123",
+    );
+  });
+
+  test("builds sandbox partner authorization URLs when environment is sandbox", () => {
+    const talo = new TaloClient({
+      clientId: "client_123",
+      clientSecret: "secret_456",
+      userId: "user_789",
+      environment: "sandbox",
+      fetch: async () => new Response("", { status: 500 }),
+    });
+
+    expect(talo.getPartnerAuthorizationUrl("partner_abc")).toBe(
+      "https://sandbox.talo.com.ar/authorize/partner_abc",
+    );
+
+    expect(
+      talo.getPartnerAuthorizationUrl("partner_abc", {
+        referredUserId: "external_123",
+      }),
+    ).toBe(
+      "https://sandbox.talo.com.ar/authorize/partner_abc?referred_user_id=external_123",
+    );
+  });
+
+  test("allows authorizeBaseUrl override with optional trailing slash", () => {
+    const talo = new TaloClient({
+      clientId: "client_123",
+      clientSecret: "secret_456",
+      userId: "user_789",
+      authorizeBaseUrl: "https://custom.example/authorize/",
+      fetch: async () => new Response("", { status: 500 }),
+    });
+
+    expect(talo.getPartnerAuthorizationUrl("partner_abc")).toBe(
+      "https://custom.example/authorize/partner_abc",
     );
   });
 

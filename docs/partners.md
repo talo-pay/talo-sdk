@@ -9,7 +9,8 @@ const url = talo.partners.getAuthorizationUrl("partner_id", {
   referredUserId: "external_user_123",
 });
 
-// https://app.talo.com.ar/authorize/{partner_id}?referred_user_id={external_user_id}
+// production: https://app.talo.com.ar/authorize/{partner_id}?referred_user_id={external_user_id}
+// sandbox:    https://sandbox.talo.com.ar/authorize/{partner_id}?referred_user_id={external_user_id}
 ```
 
 ## Exchange callback code
