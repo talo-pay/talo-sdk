@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TaloTokenManager } from "./core/auth";
+import { TaloTokenManager, type AccessTokenProvider } from "./core/auth";
 import { TaloHttpClient } from "./core/http";
 import { CustomersResource } from "./resources/customers";
 import { PaymentsResource } from "./resources/payments";
@@ -39,14 +39,31 @@ const TALO_AUTHORIZE_BASE_URLS: Record<TaloEnvironment, string> = {
 };
 
 const clientConfigSchema = z.object({
-  clientId: z.string().min(1),
-  clientSecret: z.string().min(1),
-  userId: z.string().min(1),
+  clientId: z.string().min(1).optional(),
+  clientSecret: z.string().min(1).optional(),
+  userId: z.string().min(1).optional(),
+  accessToken: z.string().min(1).optional(),
   environment: z.enum(["production", "sandbox"]).optional(),
   baseUrl: z.string().url().optional(),
   authorizeBaseUrl: z.string().url().optional(),
   headers: z.custom<HeadersInit>().optional(),
   fetch: z.custom<FetchLike>().optional(),
+}).superRefine((config, ctx) => {
+  if (config.accessToken !== undefined) {
+    return;
+  }
+
+  const requiredFields = ["clientId", "clientSecret", "userId"] as const;
+
+  for (const field of requiredFields) {
+    if (config[field] === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [field],
+        message: `${field} is required when accessToken is not provided`,
+      });
+    }
+  }
 });
 
 /**
@@ -71,18 +88,23 @@ export class TaloClient {
     const authorizeBaseUrl =
       parsedConfig.authorizeBaseUrl ?? TALO_AUTHORIZE_BASE_URLS[environment];
 
-    const tokenManager = new TaloTokenManager({
-      baseUrl,
-      clientId: parsedConfig.clientId,
-      clientSecret: parsedConfig.clientSecret,
-      userId: parsedConfig.userId,
-      headers: parsedConfig.headers,
-      fetch: parsedConfig.fetch,
-    });
+    const tokenProvider: AccessTokenProvider =
+      parsedConfig.accessToken !== undefined
+        ? {
+            getAccessToken: async () => parsedConfig.accessToken as string,
+          }
+        : new TaloTokenManager({
+            baseUrl,
+            clientId: parsedConfig.clientId as string,
+            clientSecret: parsedConfig.clientSecret as string,
+            userId: parsedConfig.userId as string,
+            headers: parsedConfig.headers,
+            fetch: parsedConfig.fetch,
+          });
 
     const httpClient = new TaloHttpClient({
       baseUrl,
-      tokenProvider: tokenManager,
+      tokenProvider,
       headers: parsedConfig.headers,
       fetch: parsedConfig.fetch,
     });

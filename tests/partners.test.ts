@@ -218,6 +218,43 @@ describe("TaloClient partners", () => {
     });
   });
 
+  test("gets partner account with exchanged access token", async () => {
+    const requestedUrls: string[] = [];
+    const requestAuthorizations: string[] = [];
+
+    const talo = new TaloClient({
+      accessToken: "PAR-token_abc",
+      fetch: async (input, init) => {
+        const url = String(input);
+        requestedUrls.push(url);
+        requestAuthorizations.push(
+          new Headers(init?.headers).get("authorization") ?? "",
+        );
+
+        return new Response(
+          JSON.stringify({
+            data: {
+              user_id: "account_user",
+              account_status: "PENDING",
+            },
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          },
+        );
+      },
+    });
+
+    const account = await talo.partners.getAccount("account_user");
+
+    expect(account.account_status).toBe("PENDING");
+    expect(requestedUrls).toEqual([
+      "https://api.talo.com.ar/users/account_user/account",
+    ]);
+    expect(requestAuthorizations).toEqual(["Bearer PAR-token_abc"]);
+  });
+
   test("validates partner account update payload", async () => {
     const talo = createClient(async () => new Response("", { status: 500 }));
 

@@ -27,16 +27,27 @@ export type FetchLike = (
 
 export type TaloEnvironment = "production" | "sandbox";
 
-export interface TaloClientConfig {
-  clientId: string;
-  clientSecret: string;
-  userId: string;
+interface TaloBaseClientConfig {
   environment?: TaloEnvironment | undefined;
   baseUrl?: string | undefined;
   authorizeBaseUrl?: string | undefined;
   headers?: HeadersInit | undefined;
   fetch?: FetchLike | undefined;
 }
+
+export type TaloClientConfig =
+  | (TaloBaseClientConfig & {
+      clientId: string;
+      clientSecret: string;
+      userId: string;
+      accessToken?: string | undefined;
+    })
+  | (TaloBaseClientConfig & {
+      accessToken: string;
+      clientId?: string | undefined;
+      clientSecret?: string | undefined;
+      userId?: string | undefined;
+    });
 
 export type AuthorizeRequest = z.infer<typeof authorizeRequestSchema>;
 export type AuthorizeResponseEnvelope = z.infer<typeof authorizeResponseSchema>;
