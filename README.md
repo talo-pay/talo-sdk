@@ -69,6 +69,7 @@ const payment = await talo.payments.create({
     dni: "12345678",
   },
   // partner_id: process.env.TALO_PARTNER_ID, // required when operating as a partner
+  // store: { store_type: "custom", store_id: "store-downtown" }, // optional, store must exist in your account
 });
 
 console.log(payment.id, payment.payment_status);

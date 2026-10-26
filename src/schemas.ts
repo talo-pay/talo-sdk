@@ -41,6 +41,24 @@ export const clientDataSchema = z
   })
   .partial();
 
+/** Store types accepted by the `store` field when creating a payment. */
+export const paymentStoreTypeSchema = z.enum(["custom", "pow", "drubbit"]);
+
+export const createPaymentStoreSchema = z.object({
+  store_type: paymentStoreTypeSchema,
+  /** Store identifier in your system. The store must already exist in your Talo account. */
+  store_id: z.union([z.string().min(1), z.number()]),
+  app_id: z.string().min(1).optional(),
+});
+
+export const paymentStoreSchema = z
+  .object({
+    store_type: z.string(),
+    store_id: z.union([z.string(), z.number()]),
+    app_id: z.string().optional(),
+  })
+  .passthrough();
+
 export const authorizeRequestSchema = z.object({
   client_id: z.string().min(1),
   client_secret: z.string().min(1),
@@ -132,6 +150,8 @@ export const createPaymentRequestSchema = z.object({
   client_data: clientDataSchema.optional(),
   /** Partner identifier attributing payment creation to a specific partner. Required for partners, optional for direct customers. */
   partner_id: z.string().min(1).optional(),
+  /** Store the payment belongs to. Payments with a store get an `ST-` id prefix. */
+  store: createPaymentStoreSchema.optional(),
 });
 
 export const updatePaymentMetadataRequestSchema = z.object({
@@ -191,6 +211,7 @@ export const paymentSchema = z
     client_data: clientDataSchema.optional(),
     metadata: z.record(z.unknown()).optional(),
     partner_id: z.string().optional(),
+    store: paymentStoreSchema.optional(),
   })
   .passthrough();
 
