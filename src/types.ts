@@ -5,6 +5,7 @@ import {
   authorizeResponseSchema,
   createCustomerRequestSchema,
   createPaymentRequestSchema,
+  createPaymentStoreSchema,
   createRefundRequestSchema,
   customerResponseSchema,
   customerTransactionResponseSchema,
@@ -75,6 +76,7 @@ export type PartnerAccountResponseEnvelope = z.infer<
 export type PartnerAccountResponse = PartnerAccountResponseEnvelope["data"];
 
 export type CreatePaymentRequest = z.infer<typeof createPaymentRequestSchema>;
+export type CreatePaymentStore = z.infer<typeof createPaymentStoreSchema>;
 export type UpdatePaymentMetadataRequest = z.infer<
   typeof updatePaymentMetadataRequestSchema
 >;

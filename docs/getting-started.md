@@ -39,3 +39,24 @@ const payment = await talo.payments.create({
 
 console.log(payment.id, payment.payment_status, payment.payment_url);
 ```
+
+## Associate a payment with a store
+
+If you sell through more than one store or channel, pass `store` to group payments by store in the Talo dashboard.
+
+```ts
+const payment = await talo.payments.create({
+  user_id: process.env.TALO_USER_ID!,
+  price: { amount: 15000, currency: "ARS" },
+  payment_options: ["transfer"],
+  external_id: "ORDER_123",
+  webhook_url: "https://your-app.com/webhooks/talo",
+  store: { store_type: "custom", store_id: "store-downtown" },
+});
+
+console.log(payment.id, payment.store); // "ST-...", { store_type: "custom", store_id: "store-downtown" }
+```
+
+- The store must already exist in your Talo account (`POST /users/{user_id}/stores`). Otherwise the API responds `400` with `store.not.found`.
+- Payments with a store get an id that starts with `ST-` instead of `VAR-`.
+- `external_id` must be unique across your account, not only within each store.

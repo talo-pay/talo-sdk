@@ -188,6 +188,84 @@ describe("TaloClient payments", () => {
     ).rejects.toBeInstanceOf(ZodError);
   });
 
+  test("forwards store in create payment body when provided", async () => {
+    const requestedBodies: string[] = [];
+
+    const talo = createClient(async (input, init) => {
+      const url = String(input);
+
+      if (url.endsWith("/users/user_789/tokens")) {
+        return new Response(JSON.stringify({ data: { token: "token_abc" } }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      requestedBodies.push(String(init?.body ?? ""));
+
+      return new Response(
+        JSON.stringify({
+          data: {
+            id: "ST-user_789-order_4",
+            payment_status: "PENDING",
+            store: { store_type: "custom", store_id: "tienda-centro" },
+          },
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    });
+
+    const payment = await talo.payments.create({
+      user_id: "user_789",
+      price: { amount: 10000, currency: "ARS" },
+      payment_options: ["transfer"],
+      external_id: "order_4",
+      webhook_url: "https://example.com/webhooks/talo",
+      store: { store_type: "custom", store_id: "tienda-centro" },
+    });
+
+    const parsedBody = JSON.parse(requestedBodies[0] ?? "{}");
+    expect(parsedBody.store).toEqual({
+      store_type: "custom",
+      store_id: "tienda-centro",
+    });
+    expect(payment.store).toEqual({
+      store_type: "custom",
+      store_id: "tienda-centro",
+    });
+  });
+
+  test("rejects create payment when store_type is unsupported", async () => {
+    const requestedUrls: string[] = [];
+
+    const talo = createClient(async (input) => {
+      requestedUrls.push(String(input));
+
+      return new Response(JSON.stringify({ data: { token: "token_abc" } }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    await expect(
+      talo.payments.create({
+        user_id: "user_789",
+        price: { amount: 10000, currency: "ARS" },
+        payment_options: ["transfer"],
+        external_id: "order_5",
+        webhook_url: "https://example.com/webhooks/talo",
+        store: {
+          store_type: "tiendanube" as "custom",
+          store_id: "tienda-centro",
+        },
+      }),
+    ).rejects.toBeInstanceOf(ZodError);
+    expect(requestedUrls.some((url) => url.endsWith("/payments/"))).toBe(false);
+  });
+
   test("throws TaloError with parsed API error payload", async () => {
     const talo = createClient(async (input) => {
       const url = String(input);
