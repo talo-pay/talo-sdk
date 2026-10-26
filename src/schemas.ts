@@ -42,7 +42,7 @@ export const clientDataSchema = z
   .partial();
 
 /** Store types accepted by the `store` field when creating a payment. */
-export const paymentStoreTypeSchema = z.enum(["custom", "pow", "drubbit"]);
+export const paymentStoreTypeSchema = z.enum(["custom"]);
 
 export const createPaymentStoreSchema = z.object({
   store_type: paymentStoreTypeSchema,
