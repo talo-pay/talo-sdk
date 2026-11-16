@@ -84,16 +84,19 @@ export class TaloHttpClient {
       });
     }
 
-    const hasCustomAuthorization = baseHeaders.has("authorization");
-    const shouldUseManagedAuth =
-      (options.auth ?? "required") === "required" && !hasCustomAuthorization;
+    // Authenticated requests always carry the Talo (or partner) token from the
+    // token provider. A custom `authorization` header never replaces it.
+    const shouldUseManagedAuth = (options.auth ?? "required") === "required";
+    if (shouldUseManagedAuth) {
+      baseHeaders.delete("authorization");
+    }
 
     const executeRequest = async (
       authorizationToken: string | undefined,
     ): Promise<Response> => {
       const headers = new Headers(baseHeaders);
 
-      if (!hasCustomAuthorization && authorizationToken !== undefined) {
+      if (authorizationToken !== undefined) {
         const token = authorizationToken.startsWith("Bearer ")
           ? authorizationToken
           : `Bearer ${authorizationToken}`;

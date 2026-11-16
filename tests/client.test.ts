@@ -112,6 +112,68 @@ describe("TaloClient payments", () => {
     expect(paymentHeaders.get("content-type")).toBe("application/json");
   });
 
+  test("always sends the Talo token on create and get, even with a custom authorization header", async () => {
+    const authorizationByUrl: Array<[string, string | null]> = [];
+
+    const fetchImpl: FetchLike = async (input, init) => {
+      const url = String(input);
+      authorizationByUrl.push([url, new Headers(init?.headers).get("authorization")]);
+
+      if (url.endsWith("/users/user_789/tokens")) {
+        return new Response(JSON.stringify({ data: { token: "token_abc" } }), { status: 200 });
+      }
+
+      return new Response(
+        JSON.stringify({ data: { id: "payment_123", payment_status: "PENDING" } }),
+        { status: 200 },
+      );
+    };
+
+    const talo = new TaloClient({
+      clientId: "client_123",
+      clientSecret: "secret_456",
+      userId: "user_789",
+      headers: { authorization: "Basic not-a-talo-token" },
+      fetch: fetchImpl,
+    });
+
+    await talo.payments.create({
+      user_id: "user_789",
+      price: { amount: 10000, currency: "ARS" },
+      payment_options: ["transfer"],
+      external_id: "order_1",
+      webhook_url: "https://example.com/webhooks/talo",
+    });
+    await talo.payments.get("payment_123");
+
+    expect(authorizationByUrl).toEqual([
+      ["https://api.talo.com.ar/users/user_789/tokens", null],
+      ["https://api.talo.com.ar/payments/", "Bearer token_abc"],
+      ["https://api.talo.com.ar/payments/payment_123", "Bearer token_abc"],
+    ]);
+
+    const partnerTalo = new TaloClient({
+      accessToken: "PAR-partner-token",
+      headers: { Authorization: "Basic not-a-talo-token" },
+      fetch: fetchImpl,
+    });
+    authorizationByUrl.length = 0;
+
+    await partnerTalo.payments.create({
+      user_id: "user_789",
+      price: { amount: 10000, currency: "ARS" },
+      payment_options: ["transfer"],
+      external_id: "order_1",
+      webhook_url: "https://example.com/webhooks/talo",
+    });
+    await partnerTalo.payments.get("payment_123");
+
+    expect(authorizationByUrl).toEqual([
+      ["https://api.talo.com.ar/payments/", "Bearer PAR-partner-token"],
+      ["https://api.talo.com.ar/payments/payment_123", "Bearer PAR-partner-token"],
+    ]);
+  });
+
   test("forwards partner_id in create payment body when provided", async () => {
     const requestedBodies: string[] = [];
 
