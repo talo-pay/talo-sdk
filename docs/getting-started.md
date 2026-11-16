@@ -40,6 +40,10 @@ const payment = await talo.payments.create({
 console.log(payment.id, payment.payment_status, payment.payment_url);
 ```
 
+`payments.create` and `payments.get` always send your Talo access token as
+`Authorization: Bearer <token>`. You do not set this header yourself: a custom
+`authorization` value in `headers` does not replace the token.
+
 ## Associate a payment with a store
 
 If you sell through more than one store or channel, pass `store` to group payments by store in the Talo dashboard.

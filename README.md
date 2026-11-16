@@ -23,6 +23,14 @@ It fetches a token from `POST /users/:user_id/tokens`, caches it in memory, refr
 Partner flows can also pass an exchanged `accessToken` directly. In that mode,
 the SDK sends that bearer token on API calls and does not call the token endpoint.
 
+Every authenticated call, including `payments.create` (`POST /payments/`) and
+`payments.get` (`GET /payments/{id}`), always sends `Authorization: Bearer <token>`
+with the Talo token (or the partner `accessToken`). The SDK never sends these
+calls without a token. An `authorization` value in the client `headers` option
+does not replace the token. If the client has no credentials (neither
+`clientId` + `clientSecret` + `userId` nor `accessToken`), the constructor
+throws a `ZodError` before any request.
+
 ## Environment selection
 
 The SDK supports first-class environments:
